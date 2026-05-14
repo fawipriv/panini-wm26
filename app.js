@@ -568,7 +568,7 @@ function renderExportTexts() {
   const copyDupes   = document.getElementById('btn-copy-dupes');
 
   const missing = collectionData
-    .filter(s => s.status === 'fehlt')
+    .filter(s => s.status === 'fehlt' && s.code)
     .map(s => s.code)
     .sort();
 
