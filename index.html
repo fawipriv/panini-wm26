@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panini WM 2026</title>
   <meta name="theme-color" content="#1a7a3c">
+  <title>Panini WM 2026</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,54 +16,91 @@
     </div>
   </header>
 
-  <main>
+  <!-- ── Eintragen ─────────────────────────────────────────────────────── -->
+  <main id="eintragen-section">
     <section id="form-card">
       <label for="nutzer">Wer bist du?</label>
       <select id="nutzer"></select>
 
-      <div id="tabs">
-        <button class="tab active" data-tab="text" aria-label="Code eingeben">⌨ Code</button>
-        <button class="tab" data-tab="foto" aria-label="Foto aufnehmen">📷 Foto</button>
-        <button class="tab" data-tab="audio" aria-label="Sprache aufnehmen">🎤 Sprache</button>
+      <div id="tabs" role="tablist">
+        <button class="tab active" data-tab="text" role="tab" aria-selected="true" aria-controls="tab-text">⌨ Code</button>
+        <button class="tab" data-tab="foto" role="tab" aria-selected="false" aria-controls="tab-foto">📷 Foto</button>
+        <button class="tab" data-tab="audio" role="tab" aria-selected="false" aria-controls="tab-audio">🎤 Sprache</button>
       </div>
 
-      <!-- Text Tab -->
-      <div id="tab-text" class="tab-panel active">
+      <div id="tab-text" class="tab-panel active" role="tabpanel">
         <input id="code-input" type="text" placeholder="z.B. MEX1, ARG17, GER20"
-               autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+               autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
+               aria-label="Sticker-Code eingeben">
         <button id="btn-text" class="btn-primary">Eintragen</button>
       </div>
 
-      <!-- Foto Tab -->
-      <div id="tab-foto" class="tab-panel">
-        <div id="foto-preview-wrap">
-          <img id="foto-preview" src="" alt="" hidden>
-          <div id="foto-placeholder">Kein Foto ausgewählt</div>
+      <div id="tab-foto" class="tab-panel" role="tabpanel">
+        <div id="foto-preview-wrap" role="img" aria-label="Foto-Vorschau">
+          <img id="foto-preview" src="" alt="Vorschau des ausgewählten Fotos" hidden>
+          <div id="foto-placeholder">
+            <span style="font-size:2rem">📷</span><br>
+            Kein Foto ausgewählt
+          </div>
         </div>
-        <input id="foto-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="foto-input" type="file" accept="image/*" capture="environment" hidden aria-label="Foto auswählen">
         <button id="btn-foto-pick" class="btn-secondary">Foto aufnehmen / auswählen</button>
-        <button id="btn-foto-send" class="btn-primary" disabled>Sticker erkennen</button>
+        <button id="btn-foto-send" class="btn-primary" disabled aria-label="Sticker aus Foto erkennen">Sticker erkennen</button>
       </div>
 
-      <!-- Audio Tab -->
-      <div id="tab-audio" class="tab-panel">
-        <div id="audio-status">Halte die Taste gedrückt und sprich den Sticker-Code</div>
+      <div id="tab-audio" class="tab-panel" role="tabpanel">
+        <div id="audio-status" aria-live="polite">Halte die Taste gedrückt und sprich den Sticker-Code</div>
         <button id="btn-mic" class="btn-mic" aria-label="Aufnahme starten – gedrückt halten">🎤 Halten zum Aufnehmen</button>
       </div>
 
-      <!-- Feedback -->
-      <div id="feedback" hidden></div>
+      <div id="feedback" hidden role="status" aria-live="polite"></div>
     </section>
 
-    <section id="stats-card">
+    <section id="stats-card" aria-label="Übersicht">
       <h2>Übersicht</h2>
       <div id="stats">
         <div class="stat"><span id="stat-vorhanden">–</span><small>Vorhanden</small></div>
-        <div class="stat"><span id="stat-fehlt">–</span><small>Fehlen noch</small></div>
-        <div class="stat"><span id="stat-doppelt">–</span><small>Doppelt</small></div>
+        <div class="stat" id="stat-fehlt-wrap"><span id="stat-fehlt">–</span><small>Fehlen noch</small></div>
+        <div class="stat" id="stat-doppelt-wrap"><span id="stat-doppelt">–</span><small>Doppelt</small></div>
       </div>
     </section>
   </main>
+
+  <!-- ── Sammlung ───────────────────────────────────────────────────────── -->
+  <div id="sammlung-section" hidden aria-label="Sticker-Sammlung">
+    <div id="collection-toolbar">
+      <input id="collection-search" type="search" placeholder="Suche nach Code, Name oder Team…"
+             autocomplete="off" aria-label="Sammlung durchsuchen">
+      <div id="filter-chips" role="group" aria-label="Filter">
+        <button class="chip active" data-filter="alle">Alle</button>
+        <button class="chip" data-filter="vorhanden">✓ Vorhanden</button>
+        <button class="chip chip-doppelt" data-filter="doppelt">Doppelt</button>
+        <button class="chip chip-fehlt" data-filter="fehlt">Fehlt</button>
+      </div>
+    </div>
+    <div id="collection-list" aria-live="polite"></div>
+  </div>
+
+  <!-- ── Bottom Nav ─────────────────────────────────────────────────────── -->
+  <nav id="bottom-nav" aria-label="Hauptnavigation">
+    <button class="nav-btn active" data-section="eintragen" aria-label="Sticker eintragen">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      <span>Eintragen</span>
+    </button>
+    <button class="nav-btn" data-section="sammlung" aria-label="Sammlung ansehen">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>Sammlung</span>
+    </button>
+  </nav>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
