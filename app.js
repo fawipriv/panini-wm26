@@ -379,18 +379,15 @@ function renderCollection() {
     return;
   }
 
+  // Preserve album order: teams and stickers within teams keep CSV row order
+  const teamOrder = [];
   const grouped = {};
   stickers.forEach(s => {
-    if (!grouped[s.team]) grouped[s.team] = [];
+    if (!grouped[s.team]) {
+      grouped[s.team] = [];
+      teamOrder.push(s.team);
+    }
     grouped[s.team].push(s);
-  });
-
-  Object.values(grouped).forEach(arr => {
-    arr.sort((a, b) => {
-      const na = parseInt(a.code.replace(/[^0-9]/g, '')) || 0;
-      const nb = parseInt(b.code.replace(/[^0-9]/g, '')) || 0;
-      return na - nb;
-    });
   });
 
   const teamTotals = {};
@@ -398,13 +395,6 @@ function renderCollection() {
     if (!teamTotals[s.team]) teamTotals[s.team] = { total: 0, collected: 0 };
     teamTotals[s.team].total++;
     if (s.status !== 'fehlt') teamTotals[s.team].collected++;
-  });
-
-  const teamOrder = Object.keys(grouped).sort((a, b) => {
-    const ca = teamTotals[a] ? teamTotals[a].collected : 0;
-    const cb = teamTotals[b] ? teamTotals[b].collected : 0;
-    if (cb !== ca) return cb - ca;
-    return a.localeCompare(b);
   });
 
   let html = '';
