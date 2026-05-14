@@ -10,6 +10,10 @@
 <body>
   <header>
     <h1>Panini WM 2026</h1>
+    <div id="family-bar">
+      <span id="family-name"></span>
+      <button id="btn-logout">Abmelden</button>
+    </div>
     <div id="progress-wrap">
       <div id="progress-bar"><div id="progress-fill"></div></div>
       <span id="progress-text">Lade...</span>
@@ -154,6 +158,23 @@
       <span>Export</span>
     </button>
   </nav>
+
+  <!-- ── Login Overlay ──────────────────────────────────────────────────────── -->
+  <div id="login-overlay" role="dialog" aria-modal="true" aria-label="Anmeldung">
+    <div id="login-card">
+      <div id="login-logo">⚽</div>
+      <h2 id="login-title">Panini WM 2026</h2>
+      <p id="login-subtitle">Familie anmelden</p>
+      <label for="login-family">Familie</label>
+      <input id="login-family" type="text" placeholder="z.B. wigger"
+             autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+      <label for="login-pin">PIN</label>
+      <input id="login-pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"
+             autocomplete="current-password">
+      <div id="login-error" hidden role="alert"></div>
+      <button id="login-btn" class="btn-primary">Anmelden</button>
+    </div>
+  </div>
 
   <script src="config.js"></script>
   <script src="app.js"></script>

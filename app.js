@@ -1,7 +1,43 @@
-// ── Init ────────────────────────────────────────────────────────────────────
+// ── Session ──────────────────────────────────────────────────────────────────
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('panini_session')) || null; } catch { return null; }
+}
+
+function saveSession(data) {
+  localStorage.setItem('panini_session', JSON.stringify(data));
+}
+
+function clearSession() {
+  localStorage.removeItem('panini_session');
+  localStorage.removeItem('panini_nutzer');
+  sessionStorage.removeItem('panini_collection');
+  location.reload();
+}
+
+function getSheetName() {
+  return getSession()?.sheetName || '';
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
-  initFamily();
+  const session = getSession();
+  if (!session) {
+    initLoginScreen();
+  } else {
+    startApp(session);
+  }
+});
+
+function startApp(session) {
+  document.getElementById('login-overlay').hidden = true;
+  document.getElementById('family-name').textContent = session.displayName;
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    if (confirm(`Als ${session.displayName} abmelden?`)) clearSession();
+  });
+
+  initFamily(session.members);
   initTabs();
   initText();
   initFoto();
@@ -10,25 +46,82 @@ document.addEventListener('DOMContentLoaded', () => {
   initSammlung();
   loadStats();
   initExport();
-});
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+
+function initLoginScreen() {
+  const btn        = document.getElementById('login-btn');
+  const familyInput = document.getElementById('login-family');
+  const pinInput   = document.getElementById('login-pin');
+  const errorEl    = document.getElementById('login-error');
+
+  async function doLogin() {
+    const familyName = familyInput.value.trim().toLowerCase();
+    const pin        = pinInput.value.trim();
+    if (!familyName || !pin) {
+      showLoginError('Bitte Familie und PIN eingeben.');
+      return;
+    }
+    btn.disabled    = true;
+    btn.textContent = 'Anmelden…';
+    errorEl.hidden  = true;
+
+    try {
+      const res = await fetchWithRetry(CONFIG.loginUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ familyName, pin })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.success) {
+        showLoginError(data.message || 'Anmeldung fehlgeschlagen.');
+      } else {
+        saveSession({
+          familyKey:   data.familyKey,
+          displayName: data.displayName,
+          members:     data.members,
+          sheetName:   data.sheetName
+        });
+        startApp(getSession());
+      }
+    } catch {
+      showLoginError('Verbindungsfehler. Bitte nochmal versuchen.');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Anmelden';
+    }
+  }
+
+  function showLoginError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  btn.addEventListener('click', doLogin);
+  pinInput.addEventListener('keydown',    e => { if (e.key === 'Enter') doLogin(); });
+  familyInput.addEventListener('keydown', e => { if (e.key === 'Enter') pinInput.focus(); });
+}
 
 // ── Family dropdown ──────────────────────────────────────────────────────────
 
-function initFamily() {
+function initFamily(members) {
   const sel = document.getElementById('nutzer');
-  CONFIG.family.forEach(name => {
+  sel.innerHTML = '';
+  members.forEach(name => {
     const opt = document.createElement('option');
     opt.value = name;
     opt.textContent = name;
     sel.appendChild(opt);
   });
   const saved = localStorage.getItem('panini_nutzer');
-  if (saved && CONFIG.family.includes(saved)) sel.value = saved;
+  if (saved && members.includes(saved)) sel.value = saved;
   sel.addEventListener('change', () => localStorage.setItem('panini_nutzer', sel.value));
 }
 
 function getNutzer() {
-  return document.getElementById('nutzer').value || CONFIG.family[0];
+  return document.getElementById('nutzer').value || (getSession()?.members?.[0] || 'Unbekannt');
 }
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
@@ -49,7 +142,7 @@ function initTabs() {
 
 function initText() {
   const input = document.getElementById('code-input');
-  const btn = document.getElementById('btn-text');
+  const btn   = document.getElementById('btn-text');
 
   btn.addEventListener('click', () => {
     const code = input.value.trim().toUpperCase();
@@ -66,10 +159,10 @@ function initText() {
 
 function initFoto() {
   const fileInput = document.getElementById('foto-input');
-  const preview = document.getElementById('foto-preview');
+  const preview   = document.getElementById('foto-preview');
   const placeholder = document.getElementById('foto-placeholder');
-  const btnPick = document.getElementById('btn-foto-pick');
-  const btnSend = document.getElementById('btn-foto-send');
+  const btnPick   = document.getElementById('btn-foto-pick');
+  const btnSend   = document.getElementById('btn-foto-send');
 
   btnPick.addEventListener('click', () => fileInput.click());
 
@@ -100,7 +193,7 @@ function initFoto() {
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
+    reader.onload  = e => resolve(e.target.result);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -109,7 +202,7 @@ function fileToBase64(file) {
 // ── Audio input ──────────────────────────────────────────────────────────────
 
 function initAudio() {
-  const btn = document.getElementById('btn-mic');
+  const btn    = document.getElementById('btn-mic');
   const status = document.getElementById('audio-status');
   let mediaRecorder = null;
   let chunks = [];
@@ -133,30 +226,28 @@ function initAudio() {
       btn.classList.add('recording');
       btn.textContent = 'Aufnahme läuft… loslassen zum Senden';
       status.textContent = 'Aufnahme läuft…';
-    } catch (err) {
+    } catch {
       showFeedback('Mikrofon-Zugriff verweigert. Bitte Berechtigung erteilen.', 'error');
     }
   }
 
   function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-    }
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     btn.classList.remove('recording');
     btn.textContent = 'Halten zum Aufnehmen';
   }
 
-  btn.addEventListener('mousedown', startRecording);
+  btn.addEventListener('mousedown',  startRecording);
   btn.addEventListener('touchstart', e => { e.preventDefault(); startRecording(); });
-  btn.addEventListener('mouseup', stopRecording);
+  btn.addEventListener('mouseup',    stopRecording);
   btn.addEventListener('mouseleave', stopRecording);
-  btn.addEventListener('touchend', stopRecording);
+  btn.addEventListener('touchend',   stopRecording);
 }
 
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
+    reader.onload  = e => resolve(e.target.result);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -192,7 +283,7 @@ async function submitSticker(payload) {
     const res = await fetchWithRetry(CONFIG.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ ...payload, sheetName: getSheetName() })
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -214,9 +305,8 @@ async function submitSticker(payload) {
     }
 
     loadStats();
-  } catch (err) {
+  } catch {
     showFeedback('Verbindungsfehler. Bitte nochmal versuchen.', 'error');
-    console.error(err);
   }
 }
 
@@ -227,13 +317,12 @@ async function loadStats() {
     const res = await fetchWithRetry(CONFIG.statsUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
+      body: JSON.stringify({ sheetName: getSheetName() })
     });
     if (!res.ok) return;
     const data = await res.json();
     updateStats(data.vorhanden || 0, data.doppelt || 0);
   } catch {
-    // Stats endpoint not yet set up — use placeholder
     updateStats(null, null);
   }
 }
@@ -244,8 +333,8 @@ function updateStats(vorhanden, doppelt) {
   const d = doppelt ?? '–';
 
   document.getElementById('stat-vorhanden').textContent = v;
-  document.getElementById('stat-fehlt').textContent = f;
-  document.getElementById('stat-doppelt').textContent = d;
+  document.getElementById('stat-fehlt').textContent     = f;
+  document.getElementById('stat-doppelt').textContent   = d;
 
   if (vorhanden != null) {
     const pct = Math.round((vorhanden / CONFIG.totalStickers) * 100);
@@ -261,13 +350,13 @@ function updateStats(vorhanden, doppelt) {
 function showFeedback(msg, type) {
   const el = document.getElementById('feedback');
   el.textContent = msg;
-  el.className = type;
-  el.hidden = false;
+  el.className   = type;
+  el.hidden      = false;
 }
 
 function clearFeedback() {
   const el = document.getElementById('feedback');
-  el.hidden = true;
+  el.hidden    = true;
   el.className = '';
 }
 
@@ -297,7 +386,7 @@ function initNav() {
 
 // ── Sammlung ──────────────────────────────────────────────────────────────────
 
-let collectionData = null;
+let collectionData  = null;
 let _pendingScrollY = null;
 let collectionFilter = 'alle';
 let collectionSearch = '';
@@ -345,7 +434,7 @@ async function loadCollection() {
     const res = await fetchWithRetry(CONFIG.collectionUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
+      body: JSON.stringify({ sheetName: getSheetName() })
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -491,10 +580,10 @@ function renderCollection() {
 
   let stickers = collectionData.filter(s => {
     if (collectionFilter === 'vorhanden' && s.status !== 'vorhanden' && s.status !== 'doppelt') return false;
-    if (collectionFilter === 'doppelt' && s.status !== 'doppelt') return false;
-    if (collectionFilter === 'fehlt' && s.status !== 'fehlt') return false;
+    if (collectionFilter === 'doppelt'   && s.status !== 'doppelt')   return false;
+    if (collectionFilter === 'fehlt'     && s.status !== 'fehlt')     return false;
     if (collectionSearch) {
-      const q = collectionSearch;
+      const q      = collectionSearch;
       const deTeam = teamInfo(s.team).de.toLowerCase();
       if (!s.code.toLowerCase().includes(q) &&
           !s.name.toLowerCase().includes(q) &&
@@ -511,12 +600,9 @@ function renderCollection() {
 
   // Preserve album order: teams and stickers within teams keep CSV row order
   const teamOrder = [];
-  const grouped = {};
+  const grouped   = {};
   stickers.forEach(s => {
-    if (!grouped[s.team]) {
-      grouped[s.team] = [];
-      teamOrder.push(s.team);
-    }
+    if (!grouped[s.team]) { grouped[s.team] = []; teamOrder.push(s.team); }
     grouped[s.team].push(s);
   });
 
@@ -530,7 +616,7 @@ function renderCollection() {
   let html = '';
   teamOrder.forEach(team => {
     const items = grouped[team];
-    const t = teamTotals[team] || { total: items.length, collected: 0 };
+    const t     = teamTotals[team] || { total: items.length, collected: 0 };
     html += `
       <div class="team-group">
         <div class="team-header">
@@ -555,15 +641,15 @@ function renderCollection() {
 }
 
 function renderStickerRow(s) {
-  const foil = s.foil === true || s.foil === 'TRUE' || s.foil === 'true';
+  const foil      = s.foil === true || s.foil === 'TRUE' || s.foil === 'true';
   const foilBadge = foil ? '<span class="foil-star" title="Glitzer-Sticker">✦</span>' : '';
   let badge = '';
   if (s.status === 'doppelt')        badge = `<span class="badge badge-doppelt">×${s.doppelt + 1}</span>`;
   else if (s.status === 'vorhanden') badge = `<span class="badge badge-vorhanden">✓</span>`;
   else                               badge = `<span class="badge badge-fehlt">–</span>`;
 
-  const safeName = escHtml(s.name).replace(/'/g, '&#39;');
-  const addBtn = `<button class="sticker-add-btn" onclick="confirmAddSticker('${escHtml(s.code)}','${safeName}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} eintragen">+</button>`;
+  const safeName  = escHtml(s.name).replace(/'/g, '&#39;');
+  const addBtn    = `<button class="sticker-add-btn" onclick="confirmAddSticker('${escHtml(s.code)}','${safeName}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} eintragen">+</button>`;
   const removeBtn = s.status !== 'fehlt'
     ? `<button class="sticker-remove-btn" onclick="confirmRemoveSticker('${escHtml(s.code)}','${safeName}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} entfernen">−</button>`
     : '';
@@ -583,23 +669,23 @@ function showConfirmSheet({ title, sub, okLabel, okClass, onOk }) {
   const sheet = document.getElementById('confirm-sheet');
   const okBtn = document.getElementById('confirm-ok');
   document.getElementById('confirm-title').textContent = title;
-  document.getElementById('confirm-sub').textContent = sub;
+  document.getElementById('confirm-sub').textContent   = sub;
   okBtn.textContent = okLabel;
-  okBtn.className = okClass;
-  sheet.hidden = false;
-  okBtn.onclick = async () => { sheet.hidden = true; await onOk(); };
-  document.getElementById('confirm-cancel').onclick = () => { sheet.hidden = true; };
+  okBtn.className   = okClass;
+  sheet.hidden      = false;
+  okBtn.onclick     = async () => { sheet.hidden = true; await onOk(); };
+  document.getElementById('confirm-cancel').onclick  = () => { sheet.hidden = true; };
   document.getElementById('confirm-backdrop').onclick = () => { sheet.hidden = true; };
 }
 
 function confirmAddSticker(code, name, status) {
   const isDupe = status === 'vorhanden' || status === 'doppelt';
   showConfirmSheet({
-    title: `${name} (${code})`,
-    sub: isDupe ? `Bereits vorhanden — als Doppelgänger eintragen?` : `Als ${getNutzer()} eintragen?`,
+    title:   `${name} (${code})`,
+    sub:     isDupe ? `Bereits vorhanden — als Doppelgänger eintragen?` : `Als ${getNutzer()} eintragen?`,
     okLabel: 'Eintragen ✓',
     okClass: 'btn-primary',
-    onOk: () => addStickerFromSammlung(code)
+    onOk:    () => addStickerFromSammlung(code)
   });
 }
 
@@ -608,11 +694,11 @@ function confirmRemoveSticker(code, name, status) {
     ? `Einen Doppelgänger von ${name} entfernen?`
     : `${name} als nicht vorhanden markieren?`;
   showConfirmSheet({
-    title: `${name} (${code})`,
+    title:   `${name} (${code})`,
     sub,
     okLabel: 'Entfernen ✗',
     okClass: 'btn-danger',
-    onOk: () => removeStickerFromSammlung(code)
+    onOk:    () => removeStickerFromSammlung(code)
   });
 }
 
@@ -622,14 +708,14 @@ async function removeStickerFromSammlung(code) {
     const res = await fetchWithRetry(CONFIG.removeUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, nutzer: getNutzer() })
+      body: JSON.stringify({ code, nutzer: getNutzer(), sheetName: getSheetName() })
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
     if (data.success) {
       showToast(data.message, 'success');
       sessionStorage.removeItem('panini_collection');
-      collectionData = null;
+      collectionData  = null;
       _pendingScrollY = window.scrollY;
       loadStats();
       loadCollection();
@@ -647,14 +733,14 @@ async function addStickerFromSammlung(code) {
     const res = await fetchWithRetry(CONFIG.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inputType: 'text', code, nutzer: getNutzer() })
+      body: JSON.stringify({ inputType: 'text', code, nutzer: getNutzer(), sheetName: getSheetName() })
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
     if (data.success) {
       showToast(data.message, data.isDuplicate ? 'warning' : 'success');
       sessionStorage.removeItem('panini_collection');
-      collectionData = null;
+      collectionData  = null;
       _pendingScrollY = window.scrollY;
       loadStats();
       loadCollection();
@@ -671,8 +757,8 @@ async function addStickerFromSammlung(code) {
 function showToast(msg, type = 'success') {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
-  toast.className = type;
-  toast.hidden = false;
+  toast.className   = type;
+  toast.hidden      = false;
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => { toast.hidden = true; }, 3000);
 }
@@ -690,7 +776,7 @@ function initExport() {
 
 function groupByTeam(stickers) {
   const teamOrder = [];
-  const grouped = {};
+  const grouped   = {};
   stickers.forEach(s => {
     if (!grouped[s.team]) { grouped[s.team] = []; teamOrder.push(s.team); }
     grouped[s.team].push(s);
@@ -710,7 +796,7 @@ function renderExportTexts() {
   const missingStickers = collectionData.filter(s => s.status === 'fehlt' && s.code);
   if (missingStickers.length === 0) {
     missingBox.textContent = 'Du hast keine fehlenden Sticker mehr! 🎉';
-    copyMissing.disabled = true;
+    copyMissing.disabled   = true;
   } else {
     const { teamOrder, grouped } = groupByTeam(missingStickers);
     const lines = ['Mir fehlen noch:'];
@@ -721,15 +807,15 @@ function renderExportTexts() {
     });
     const text = lines.join('\n');
     missingBox.textContent = text;
-    copyMissing.disabled = false;
-    copyMissing._text = text;
+    copyMissing.disabled   = false;
+    copyMissing._text      = text;
   }
 
   // ── Doppelte ──
   const dupeStickers = collectionData.filter(s => s.status === 'doppelt' && s.code);
   if (dupeStickers.length === 0) {
     dupesBox.textContent = 'Du hast keine Doppelten.';
-    copyDupes.disabled = true;
+    copyDupes.disabled   = true;
   } else {
     const { teamOrder, grouped } = groupByTeam(dupeStickers);
     const lines = ['Ich habe doppelt:'];
@@ -743,14 +829,13 @@ function renderExportTexts() {
     });
     const text = lines.join('\n');
     dupesBox.textContent = text;
-    copyDupes.disabled = false;
-    copyDupes._text = text;
+    copyDupes.disabled   = false;
+    copyDupes._text      = text;
   }
 }
 
 function copyToClipboard(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
-    const orig = btn.textContent;
     btn.textContent = 'Kopiert ✓';
     showToast('Text kopiert!', 'success');
     setTimeout(() => { btn.textContent = 'Kopieren'; }, 2000);
@@ -761,8 +846,8 @@ function copyToClipboard(text, btn) {
 
 function escHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;');
 }

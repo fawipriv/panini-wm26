@@ -828,3 +828,104 @@ body { padding-bottom: 74px; }
   cursor: pointer;
   min-height: 44px;
 }
+
+/* ── Family Bar ─────────────────────────────────────────────────────────────── */
+
+#family-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+}
+
+#family-name {
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+#btn-logout {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+#btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Login Overlay ──────────────────────────────────────────────────────────── */
+
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: linear-gradient(150deg, #1e8a44 0%, #145f2e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#login-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px 24px 28px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+
+#login-logo {
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+#login-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+#login-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#login-card label {
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+#login-card input {
+  margin-bottom: 12px;
+}
+
+#login-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 4px;
+  animation: feedbackIn 0.2s ease;
+}
+
+#login-card .btn-primary {
+  margin-top: 12px;
+}
