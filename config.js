@@ -3,7 +3,7 @@ const CONFIG = {
   webhookUrl: 'https://f-wigger.app.n8n.cloud/webhook/sticker-add',
 
   // Familienmitglieder (beliebig erweiterbar)
-  family: ['Papa', 'Mama', 'Kind 1', 'Kind 2'],
+  family: ['Fabian', 'Noah', 'Jonas'],
 
   totalStickers: 980
 };
