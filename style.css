@@ -594,6 +594,119 @@ body { padding-bottom: 74px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Toast ─────────────────────────────────────────────────────────────────── */
+
+#toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 88%;
+  padding: 11px 20px;
+  border-radius: 99px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  z-index: 400;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  white-space: nowrap;
+  animation: toastIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+#toast.success { background: #166534; color: #fff; }
+#toast.warning { background: #9a3412; color: #fff; }
+#toast.error   { background: #991b1b; color: #fff; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0)      scale(1);    }
+}
+
+/* ── Confirm Sheet ─────────────────────────────────────────────────────────── */
+
+#confirm-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+#confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+#confirm-card {
+  position: relative;
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px max(28px, env(safe-area-inset-bottom, 28px));
+  width: 100%;
+  max-width: 480px;
+  animation: slideUp 0.26s cubic-bezier(0.34,1.2,0.64,1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+#confirm-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+#confirm-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.confirm-buttons .btn-secondary,
+.confirm-buttons .btn-primary { flex: 1; }
+
+/* ── Sticker Add Button ────────────────────────────────────────────────────── */
+
+.sticker-add-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  font-weight: 300;
+}
+.sticker-add-btn:active { transform: scale(0.9); }
+.sticker-add-btn:hover  { background: var(--green); color: #fff; }
+.sticker-add-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+/* Ensure hidden sections are truly hidden */
+[hidden] { display: none !important; }
+
 .retry-btn {
   margin-top: 4px;
   padding: 8px 20px;

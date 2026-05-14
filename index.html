@@ -81,6 +81,22 @@
     <div id="collection-list" aria-live="polite"></div>
   </div>
 
+  <!-- ── Toast ────────────────────────────────────────────────────────── -->
+  <div id="toast" hidden role="status" aria-live="polite"></div>
+
+  <!-- ── Confirm Sheet ─────────────────────────────────────────────────── -->
+  <div id="confirm-sheet" hidden aria-modal="true" role="dialog">
+    <div id="confirm-backdrop"></div>
+    <div id="confirm-card">
+      <p id="confirm-title"></p>
+      <p id="confirm-sub"></p>
+      <div class="confirm-buttons">
+        <button id="confirm-cancel" class="btn-secondary">Abbrechen</button>
+        <button id="confirm-ok" class="btn-primary">Eintragen ✓</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Bottom Nav ─────────────────────────────────────────────────────── -->
   <nav id="bottom-nav" aria-label="Hauptnavigation">
     <button class="nav-btn active" data-section="eintragen" aria-label="Sticker eintragen">

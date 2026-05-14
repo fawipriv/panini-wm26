@@ -403,16 +403,75 @@ function renderStickerRow(s) {
   const foil = s.foil === true || s.foil === 'TRUE' || s.foil === 'true';
   const foilBadge = foil ? '<span class="foil-star" title="Glitzer-Sticker">✦</span>' : '';
   let badge = '';
-  if (s.status === 'doppelt')   badge = `<span class="badge badge-doppelt">×${s.doppelt + 1}</span>`;
+  if (s.status === 'doppelt')        badge = `<span class="badge badge-doppelt">×${s.doppelt + 1}</span>`;
   else if (s.status === 'vorhanden') badge = `<span class="badge badge-vorhanden">✓</span>`;
-  else                          badge = `<span class="badge badge-fehlt">–</span>`;
+  else                               badge = `<span class="badge badge-fehlt">–</span>`;
+
+  const addBtn = `<button class="sticker-add-btn" onclick="confirmAddSticker('${escHtml(s.code)}','${escHtml(s.name).replace(/'/g,'&#39;')}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} eintragen">+</button>`;
 
   return `
     <div class="sticker-row ${escHtml(s.status)}">
       <span class="sticker-code">${escHtml(s.code)}</span>
       <span class="sticker-name">${escHtml(s.name)}${foilBadge}</span>
       ${badge}
+      ${addBtn}
     </div>`;
+}
+
+// ── Confirm Sheet ─────────────────────────────────────────────────────────────
+
+function confirmAddSticker(code, name, status) {
+  const sheet = document.getElementById('confirm-sheet');
+  const isDupe = status === 'vorhanden' || status === 'doppelt';
+
+  document.getElementById('confirm-title').textContent = `${name} (${code})`;
+  document.getElementById('confirm-sub').textContent = isDupe
+    ? `Bereits vorhanden — als Doppelgänger eintragen?`
+    : `Als ${getNutzer()} eintragen?`;
+
+  sheet.hidden = false;
+
+  document.getElementById('confirm-ok').onclick = async () => {
+    sheet.hidden = true;
+    await addStickerFromSammlung(code);
+  };
+  document.getElementById('confirm-cancel').onclick = () => { sheet.hidden = true; };
+  document.getElementById('confirm-backdrop').onclick = () => { sheet.hidden = true; };
+}
+
+async function addStickerFromSammlung(code) {
+  showToast('Wird eingetragen…', 'success');
+  try {
+    const res = await fetch(CONFIG.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inputType: 'text', code, nutzer: getNutzer() })
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, data.isDuplicate ? 'warning' : 'success');
+      sessionStorage.removeItem('panini_collection');
+      collectionData = null;
+      loadStats();
+      loadCollection();
+    } else {
+      showToast(data.message || 'Fehler beim Eintragen.', 'error');
+    }
+  } catch {
+    showToast('Verbindungsfehler.', 'error');
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = type;
+  toast.hidden = false;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.hidden = true; }, 3000);
 }
 
 function escHtml(str) {
