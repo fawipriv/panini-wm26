@@ -407,36 +407,82 @@ function renderStickerRow(s) {
   else if (s.status === 'vorhanden') badge = `<span class="badge badge-vorhanden">✓</span>`;
   else                               badge = `<span class="badge badge-fehlt">–</span>`;
 
-  const addBtn = `<button class="sticker-add-btn" onclick="confirmAddSticker('${escHtml(s.code)}','${escHtml(s.name).replace(/'/g,'&#39;')}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} eintragen">+</button>`;
+  const safeName = escHtml(s.name).replace(/'/g, '&#39;');
+  const addBtn = `<button class="sticker-add-btn" onclick="confirmAddSticker('${escHtml(s.code)}','${safeName}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} eintragen">+</button>`;
+  const removeBtn = s.status !== 'fehlt'
+    ? `<button class="sticker-remove-btn" onclick="confirmRemoveSticker('${escHtml(s.code)}','${safeName}','${escHtml(s.status)}')" aria-label="${escHtml(s.code)} entfernen">−</button>`
+    : '';
 
   return `
     <div class="sticker-row ${escHtml(s.status)}">
       <span class="sticker-code">${escHtml(s.code)}</span>
       <span class="sticker-name">${escHtml(s.name)}${foilBadge}</span>
       ${badge}
-      ${addBtn}
+      <div class="sticker-actions">${removeBtn}${addBtn}</div>
     </div>`;
 }
 
 // ── Confirm Sheet ─────────────────────────────────────────────────────────────
 
-function confirmAddSticker(code, name, status) {
+function showConfirmSheet({ title, sub, okLabel, okClass, onOk }) {
   const sheet = document.getElementById('confirm-sheet');
-  const isDupe = status === 'vorhanden' || status === 'doppelt';
-
-  document.getElementById('confirm-title').textContent = `${name} (${code})`;
-  document.getElementById('confirm-sub').textContent = isDupe
-    ? `Bereits vorhanden — als Doppelgänger eintragen?`
-    : `Als ${getNutzer()} eintragen?`;
-
+  const okBtn = document.getElementById('confirm-ok');
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-sub').textContent = sub;
+  okBtn.textContent = okLabel;
+  okBtn.className = okClass;
   sheet.hidden = false;
-
-  document.getElementById('confirm-ok').onclick = async () => {
-    sheet.hidden = true;
-    await addStickerFromSammlung(code);
-  };
+  okBtn.onclick = async () => { sheet.hidden = true; await onOk(); };
   document.getElementById('confirm-cancel').onclick = () => { sheet.hidden = true; };
   document.getElementById('confirm-backdrop').onclick = () => { sheet.hidden = true; };
+}
+
+function confirmAddSticker(code, name, status) {
+  const isDupe = status === 'vorhanden' || status === 'doppelt';
+  showConfirmSheet({
+    title: `${name} (${code})`,
+    sub: isDupe ? `Bereits vorhanden — als Doppelgänger eintragen?` : `Als ${getNutzer()} eintragen?`,
+    okLabel: 'Eintragen ✓',
+    okClass: 'btn-primary',
+    onOk: () => addStickerFromSammlung(code)
+  });
+}
+
+function confirmRemoveSticker(code, name, status) {
+  const sub = status === 'doppelt'
+    ? `Einen Doppelgänger von ${name} entfernen?`
+    : `${name} als nicht vorhanden markieren?`;
+  showConfirmSheet({
+    title: `${name} (${code})`,
+    sub,
+    okLabel: 'Entfernen ✗',
+    okClass: 'btn-danger',
+    onOk: () => removeStickerFromSammlung(code)
+  });
+}
+
+async function removeStickerFromSammlung(code) {
+  showToast('Wird entfernt…', 'warning');
+  try {
+    const res = await fetch(CONFIG.removeUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, nutzer: getNutzer() })
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      sessionStorage.removeItem('panini_collection');
+      collectionData = null;
+      loadStats();
+      loadCollection();
+    } else {
+      showToast(data.message || 'Fehler beim Entfernen.', 'error');
+    }
+  } catch {
+    showToast('Verbindungsfehler.', 'error');
+  }
 }
 
 async function addStickerFromSammlung(code) {
