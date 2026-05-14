@@ -358,6 +358,120 @@ async function loadCollection() {
   }
 }
 
+const TEAM_FLAGS = {
+  // Special
+  'FIFA World Cup': '🏆', 'FWC': '🏆', 'World Cup': '🏆',
+  // CONCACAF
+  'United States': '🇺🇸', 'USA': '🇺🇸',
+  'Mexico': '🇲🇽',
+  'Canada': '🇨🇦',
+  'Costa Rica': '🇨🇷',
+  'Honduras': '🇭🇳',
+  'Jamaica': '🇯🇲',
+  'Panama': '🇵🇦',
+  'El Salvador': '🇸🇻',
+  'Guatemala': '🇬🇹',
+  'Trinidad and Tobago': '🇹🇹',
+  'Cuba': '🇨🇺',
+  // CONMEBOL
+  'Argentina': '🇦🇷',
+  'Brazil': '🇧🇷',
+  'Uruguay': '🇺🇾',
+  'Colombia': '🇨🇴',
+  'Ecuador': '🇪🇨',
+  'Venezuela': '🇻🇪',
+  'Chile': '🇨🇱',
+  'Paraguay': '🇵🇾',
+  'Bolivia': '🇧🇴',
+  'Peru': '🇵🇪',
+  // UEFA
+  'Germany': '🇩🇪', 'Deutschland': '🇩🇪',
+  'France': '🇫🇷', 'Frankreich': '🇫🇷',
+  'Spain': '🇪🇸', 'Spanien': '🇪🇸',
+  'Portugal': '🇵🇹',
+  'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Netherlands': '🇳🇱', 'Niederlande': '🇳🇱',
+  'Belgium': '🇧🇪', 'Belgien': '🇧🇪',
+  'Switzerland': '🇨🇭', 'Schweiz': '🇨🇭',
+  'Croatia': '🇭🇷', 'Kroatien': '🇭🇷',
+  'Denmark': '🇩🇰', 'Dänemark': '🇩🇰',
+  'Austria': '🇦🇹', 'Österreich': '🇦🇹',
+  'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'Schottland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Serbia': '🇷🇸', 'Serbien': '🇷🇸',
+  'Turkey': '🇹🇷', 'Türkei': '🇹🇷',
+  'Poland': '🇵🇱', 'Polen': '🇵🇱',
+  'Italy': '🇮🇹', 'Italien': '🇮🇹',
+  'Hungary': '🇭🇺', 'Ungarn': '🇭🇺',
+  'Slovakia': '🇸🇰', 'Slowakei': '🇸🇰',
+  'Slovenia': '🇸🇮', 'Slowenien': '🇸🇮',
+  'Czech Republic': '🇨🇿', 'Czechia': '🇨🇿',
+  'Romania': '🇷🇴', 'Rumänien': '🇷🇴',
+  'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+  'Albania': '🇦🇱', 'Albanien': '🇦🇱',
+  'Ukraine': '🇺🇦',
+  'Greece': '🇬🇷', 'Griechenland': '🇬🇷',
+  'Norway': '🇳🇴', 'Norwegen': '🇳🇴',
+  'Iceland': '🇮🇸', 'Island': '🇮🇸',
+  'Northern Ireland': '🏴',
+  'Georgia': '🇬🇪', 'Georgien': '🇬🇪',
+  'Kosovo': '🇽🇰',
+  'Sweden': '🇸🇪', 'Schweden': '🇸🇪',
+  'Finland': '🇫🇮', 'Finnland': '🇫🇮',
+  'Bosnia and Herzegovina': '🇧🇦',
+  'North Macedonia': '🇲🇰',
+  'Montenegro': '🇲🇪',
+  'Luxembourg': '🇱🇺',
+  'Belarus': '🇧🇾',
+  'Russia': '🇷🇺',
+  // CAF
+  'Morocco': '🇲🇦', 'Marokko': '🇲🇦',
+  'Senegal': '🇸🇳',
+  'Nigeria': '🇳🇬',
+  'Egypt': '🇪🇬', 'Ägypten': '🇪🇬',
+  "Ivory Coast": '🇨🇮', "Côte d'Ivoire": '🇨🇮', 'Elfenbeinküste': '🇨🇮',
+  'Cameroon': '🇨🇲', 'Kamerun': '🇨🇲',
+  'Ghana': '🇬🇭',
+  'Mali': '🇲🇱',
+  'DR Congo': '🇨🇩', 'Congo DR': '🇨🇩',
+  'South Africa': '🇿🇦', 'Südafrika': '🇿🇦',
+  'Tanzania': '🇹🇿', 'Tansania': '🇹🇿',
+  'Algeria': '🇩🇿', 'Algerien': '🇩🇿',
+  'Tunisia': '🇹🇳', 'Tunesien': '🇹🇳',
+  'Zimbabwe': '🇿🇼',
+  'Cape Verde': '🇨🇻', 'Kap Verde': '🇨🇻',
+  'Guinea': '🇬🇳',
+  'Zambia': '🇿🇲',
+  'Uganda': '🇺🇬',
+  'Mozambique': '🇲🇿',
+  'Comoros': '🇰🇲',
+  // AFC
+  'Japan': '🇯🇵',
+  'South Korea': '🇰🇷', 'Korea Republic': '🇰🇷', 'Südkorea': '🇰🇷',
+  'Australia': '🇦🇺', 'Australien': '🇦🇺',
+  'Saudi Arabia': '🇸🇦', 'Saudi-Arabien': '🇸🇦',
+  'Iran': '🇮🇷',
+  'Iraq': '🇮🇶', 'Irak': '🇮🇶',
+  'Qatar': '🇶🇦', 'Katar': '🇶🇦',
+  'Uzbekistan': '🇺🇿', 'Usbekistan': '🇺🇿',
+  'China': '🇨🇳',
+  'Indonesia': '🇮🇩', 'Indonesien': '🇮🇩',
+  'Jordan': '🇯🇴', 'Jordanien': '🇯🇴',
+  'Oman': '🇴🇲',
+  'United Arab Emirates': '🇦🇪', 'UAE': '🇦🇪',
+  'Thailand': '🇹🇭',
+  'Vietnam': '🇻🇳',
+  'India': '🇮🇳', 'Indien': '🇮🇳',
+  'Kyrgyzstan': '🇰🇬',
+  'Bahrain': '🇧🇭',
+  'Kuwait': '🇰🇼',
+  // OFC
+  'New Zealand': '🇳🇿', 'Neuseeland': '🇳🇿',
+};
+
+function teamFlag(name) {
+  return TEAM_FLAGS[name] || '';
+}
+
 function renderCollection() {
   if (!collectionData) return;
   const list = document.getElementById('collection-list');
@@ -405,7 +519,7 @@ function renderCollection() {
     html += `
       <div class="team-group">
         <div class="team-header">
-          <span class="team-name">${escHtml(team)}</span>
+          <span class="team-name">${teamFlag(team)} ${escHtml(team)}</span>
           <div class="team-meta">
             <span class="team-progress">${t.collected} / ${t.total}</span>
           </div>
