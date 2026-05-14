@@ -1,6 +1,7 @@
 const CONFIG = {
   // n8n Webhook-URL — nach Aktivierung des Workflows anpassen
   webhookUrl: 'https://f-wigger.app.n8n.cloud/webhook/panini-wm26-add',
+  statsUrl: 'https://f-wigger.app.n8n.cloud/webhook/panini-wm26-stats',
 
   // Familienmitglieder (beliebig erweiterbar)
   family: ['Fabian', 'Noah', 'Jonas'],

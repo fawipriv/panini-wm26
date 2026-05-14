@@ -200,7 +200,7 @@ async function submitSticker(payload) {
 
 async function loadStats() {
   try {
-    const res = await fetch(CONFIG.webhookUrl.replace('sticker-add', 'sticker-stats'));
+    const res = await fetch(CONFIG.statsUrl);
     if (!res.ok) return;
     const data = await res.json();
     updateStats(data.vorhanden || 0, data.doppelt || 0);
