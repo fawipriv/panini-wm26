@@ -298,6 +298,7 @@ function initNav() {
 // ── Sammlung ──────────────────────────────────────────────────────────────────
 
 let collectionData = null;
+let _pendingScrollY = null;
 let collectionFilter = 'alle';
 let collectionSearch = '';
 
@@ -416,6 +417,12 @@ function renderCollection() {
   });
 
   list.innerHTML = html;
+
+  if (_pendingScrollY !== null) {
+    const y = _pendingScrollY;
+    _pendingScrollY = null;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
 }
 
 function renderStickerRow(s) {
@@ -494,6 +501,7 @@ async function removeStickerFromSammlung(code) {
       showToast(data.message, 'success');
       sessionStorage.removeItem('panini_collection');
       collectionData = null;
+      _pendingScrollY = window.scrollY;
       loadStats();
       loadCollection();
     } else {
@@ -518,6 +526,7 @@ async function addStickerFromSammlung(code) {
       showToast(data.message, data.isDuplicate ? 'warning' : 'success');
       sessionStorage.removeItem('panini_collection');
       collectionData = null;
+      _pendingScrollY = window.scrollY;
       loadStats();
       loadCollection();
     } else {
