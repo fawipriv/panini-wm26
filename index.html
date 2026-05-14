@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panini WM 2026</title>
+  <meta name="theme-color" content="#1a7a3c">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,9 +22,9 @@
       <select id="nutzer"></select>
 
       <div id="tabs">
-        <button class="tab active" data-tab="text">Code</button>
-        <button class="tab" data-tab="foto">Foto</button>
-        <button class="tab" data-tab="audio">Sprache</button>
+        <button class="tab active" data-tab="text" aria-label="Code eingeben">⌨ Code</button>
+        <button class="tab" data-tab="foto" aria-label="Foto aufnehmen">📷 Foto</button>
+        <button class="tab" data-tab="audio" aria-label="Sprache aufnehmen">🎤 Sprache</button>
       </div>
 
       <!-- Text Tab -->
@@ -47,7 +48,7 @@
       <!-- Audio Tab -->
       <div id="tab-audio" class="tab-panel">
         <div id="audio-status">Halte die Taste gedrückt und sprich den Sticker-Code</div>
-        <button id="btn-mic" class="btn-mic">Halten zum Aufnehmen</button>
+        <button id="btn-mic" class="btn-mic" aria-label="Aufnahme starten – gedrückt halten">🎤 Halten zum Aufnehmen</button>
       </div>
 
       <!-- Feedback -->
