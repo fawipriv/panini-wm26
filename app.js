@@ -688,6 +688,16 @@ function initExport() {
   });
 }
 
+function groupByTeam(stickers) {
+  const teamOrder = [];
+  const grouped = {};
+  stickers.forEach(s => {
+    if (!grouped[s.team]) { grouped[s.team] = []; teamOrder.push(s.team); }
+    grouped[s.team].push(s);
+  });
+  return { teamOrder, grouped };
+}
+
 function renderExportTexts() {
   if (!collectionData) return;
 
@@ -696,34 +706,42 @@ function renderExportTexts() {
   const copyMissing = document.getElementById('btn-copy-missing');
   const copyDupes   = document.getElementById('btn-copy-dupes');
 
-  const missing = collectionData
-    .filter(s => s.status === 'fehlt' && s.code)
-    .map(s => s.code)
-    .sort();
-
-  if (missing.length === 0) {
+  // ── Fehlende ──
+  const missingStickers = collectionData.filter(s => s.status === 'fehlt' && s.code);
+  if (missingStickers.length === 0) {
     missingBox.textContent = 'Du hast keine fehlenden Sticker mehr! 🎉';
     copyMissing.disabled = true;
   } else {
-    const text = `Mir fehlen noch: ${missing.join(', ')}.`;
+    const { teamOrder, grouped } = groupByTeam(missingStickers);
+    const lines = ['Mir fehlen noch:'];
+    teamOrder.forEach(team => {
+      const { flag, de } = teamInfo(team);
+      const codes = grouped[team].map(s => s.code).join(', ');
+      lines.push(`${flag} ${de}: ${codes}`);
+    });
+    const text = lines.join('\n');
     missingBox.textContent = text;
     copyMissing.disabled = false;
     copyMissing._text = text;
   }
 
-  const dupes = collectionData
-    .filter(s => s.status === 'doppelt')
-    .sort((a, b) => a.code.localeCompare(b.code))
-    .map(s => {
-      const extras = parseInt(s.doppelt) || 1;
-      return extras > 1 ? `${s.code} (×${extras})` : s.code;
-    });
-
-  if (dupes.length === 0) {
+  // ── Doppelte ──
+  const dupeStickers = collectionData.filter(s => s.status === 'doppelt' && s.code);
+  if (dupeStickers.length === 0) {
     dupesBox.textContent = 'Du hast keine Doppelten.';
     copyDupes.disabled = true;
   } else {
-    const text = `Ich habe doppelt: ${dupes.join(', ')}.`;
+    const { teamOrder, grouped } = groupByTeam(dupeStickers);
+    const lines = ['Ich habe doppelt:'];
+    teamOrder.forEach(team => {
+      const { flag, de } = teamInfo(team);
+      const codes = grouped[team].map(s => {
+        const extras = parseInt(s.doppelt) || 1;
+        return extras > 1 ? `${s.code} (×${extras})` : s.code;
+      }).join(', ');
+      lines.push(`${flag} ${de}: ${codes}`);
+    });
+    const text = lines.join('\n');
     dupesBox.textContent = text;
     copyDupes.disabled = false;
     copyDupes._text = text;
