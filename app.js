@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initSammlung();
   loadStats();
+  initExport();
 });
 
 // ── Family dropdown ──────────────────────────────────────────────────────────
@@ -262,8 +263,13 @@ function initNav() {
       btn.classList.add('active');
       btn.setAttribute('aria-pressed', 'true');
       document.getElementById('eintragen-section').hidden = section !== 'eintragen';
-      document.getElementById('sammlung-section').hidden = section !== 'sammlung';
-      if (section === 'sammlung' && !collectionData) loadCollection();
+      document.getElementById('sammlung-section').hidden  = section !== 'sammlung';
+      document.getElementById('export-section').hidden    = section !== 'export';
+      if ((section === 'sammlung' || section === 'export') && !collectionData) {
+        loadCollection();
+      } else if (section === 'export') {
+        renderExportTexts();
+      }
     });
   });
 }
@@ -305,6 +311,7 @@ async function loadCollection() {
       if (Date.now() - ts < 5 * 60 * 1000) {
         collectionData = data;
         renderCollection();
+        renderExportTexts();
         return;
       }
     } catch {}
@@ -323,6 +330,7 @@ async function loadCollection() {
     collectionData = Array.isArray(data) ? data : (data.stickers || []);
     sessionStorage.setItem('panini_collection', JSON.stringify({ data: collectionData, ts: Date.now() }));
     renderCollection();
+    renderExportTexts();
   } catch {
     list.innerHTML = '<div class="collection-error"><span>Sammlung konnte nicht geladen werden.</span><button class="retry-btn" onclick="loadCollection()">Nochmals versuchen</button></div>';
   }
@@ -518,6 +526,70 @@ function showToast(msg, type = 'success') {
   toast.hidden = false;
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => { toast.hidden = true; }, 3000);
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+
+function initExport() {
+  document.getElementById('btn-copy-missing').addEventListener('click', function () {
+    copyToClipboard(this._text, this);
+  });
+  document.getElementById('btn-copy-dupes').addEventListener('click', function () {
+    copyToClipboard(this._text, this);
+  });
+}
+
+function renderExportTexts() {
+  if (!collectionData) return;
+
+  const missingBox  = document.getElementById('export-missing-box');
+  const dupesBox    = document.getElementById('export-dupes-box');
+  const copyMissing = document.getElementById('btn-copy-missing');
+  const copyDupes   = document.getElementById('btn-copy-dupes');
+
+  const missing = collectionData
+    .filter(s => s.status === 'fehlt')
+    .map(s => s.code)
+    .sort();
+
+  if (missing.length === 0) {
+    missingBox.textContent = 'Du hast keine fehlenden Sticker mehr! 🎉';
+    copyMissing.disabled = true;
+  } else {
+    const text = `Mir fehlen noch: ${missing.join(', ')}.`;
+    missingBox.textContent = text;
+    copyMissing.disabled = false;
+    copyMissing._text = text;
+  }
+
+  const dupes = collectionData
+    .filter(s => s.status === 'doppelt')
+    .sort((a, b) => a.code.localeCompare(b.code))
+    .map(s => {
+      const extras = parseInt(s.doppelt) || 1;
+      return extras > 1 ? `${s.code} (×${extras})` : s.code;
+    });
+
+  if (dupes.length === 0) {
+    dupesBox.textContent = 'Du hast keine Doppelten.';
+    copyDupes.disabled = true;
+  } else {
+    const text = `Ich habe doppelt: ${dupes.join(', ')}.`;
+    dupesBox.textContent = text;
+    copyDupes.disabled = false;
+    copyDupes._text = text;
+  }
+}
+
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Kopiert ✓';
+    showToast('Text kopiert!', 'success');
+    setTimeout(() => { btn.textContent = 'Kopieren'; }, 2000);
+  }).catch(() => {
+    showToast('Kopieren fehlgeschlagen.', 'error');
+  });
 }
 
 function escHtml(str) {

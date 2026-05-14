@@ -747,6 +747,70 @@ body { padding-bottom: 74px; }
 .btn-danger:active { transform: scale(0.97); }
 .btn-danger:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
+/* ── Export ─────────────────────────────────────────────────────────────────── */
+
+#export-section {
+  padding: 16px 16px 100px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+#export-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.export-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.export-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.export-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.export-card-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.export-card-header p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.export-text-box {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text);
+  word-break: break-all;
+  min-height: 52px;
+  border: 1px solid var(--border);
+}
+
+.export-copy-btn {
+  width: 100%;
+}
+
 /* Ensure hidden sections are truly hidden */
 [hidden] { display: none !important; }
 

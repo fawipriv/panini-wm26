@@ -66,6 +66,35 @@
     </section>
   </main>
 
+  <!-- ── Export ──────────────────────────────────────────────────────────── -->
+  <div id="export-section" hidden aria-label="Export">
+    <div id="export-list">
+      <div class="export-card">
+        <div class="export-card-header">
+          <div class="export-card-icon">📋</div>
+          <div>
+            <h3>Meine Fehlenden</h3>
+            <p>Alle Sticker die du noch brauchst</p>
+          </div>
+        </div>
+        <div id="export-missing-box" class="export-text-box" aria-live="polite"></div>
+        <button id="btn-copy-missing" class="btn-primary export-copy-btn" disabled>Kopieren</button>
+      </div>
+
+      <div class="export-card">
+        <div class="export-card-header">
+          <div class="export-card-icon">🔄</div>
+          <div>
+            <h3>Meine Doppelten</h3>
+            <p>Sticker die du tauschen kannst</p>
+          </div>
+        </div>
+        <div id="export-dupes-box" class="export-text-box" aria-live="polite"></div>
+        <button id="btn-copy-dupes" class="btn-primary export-copy-btn" disabled>Kopieren</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Sammlung ───────────────────────────────────────────────────────── -->
   <div id="sammlung-section" hidden aria-label="Sticker-Sammlung">
     <div id="collection-toolbar">
@@ -115,6 +144,14 @@
         <rect x="14" y="14" width="7" height="7" rx="1"/>
       </svg>
       <span>Sammlung</span>
+    </button>
+    <button class="nav-btn" data-section="export" aria-label="Exportieren">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+        <polyline points="16 6 12 2 8 6"/>
+        <line x1="12" y1="2" x2="12" y2="15"/>
+      </svg>
+      <span>Export</span>
     </button>
   </nav>
 
