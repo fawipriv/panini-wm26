@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panini WM 2026</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Panini WM 2026</h1>
+    <div id="progress-wrap">
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+      <span id="progress-text">Lade...</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="form-card">
+      <label for="nutzer">Wer bist du?</label>
+      <select id="nutzer"></select>
+
+      <div id="tabs">
+        <button class="tab active" data-tab="text">Code</button>
+        <button class="tab" data-tab="foto">Foto</button>
+        <button class="tab" data-tab="audio">Sprache</button>
+      </div>
+
+      <!-- Text Tab -->
+      <div id="tab-text" class="tab-panel active">
+        <input id="code-input" type="text" placeholder="z.B. MEX1, ARG17, GER20"
+               autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+        <button id="btn-text" class="btn-primary">Eintragen</button>
+      </div>
+
+      <!-- Foto Tab -->
+      <div id="tab-foto" class="tab-panel">
+        <div id="foto-preview-wrap">
+          <img id="foto-preview" src="" alt="" hidden>
+          <div id="foto-placeholder">Kein Foto ausgewählt</div>
+        </div>
+        <input id="foto-input" type="file" accept="image/*" capture="environment" hidden>
+        <button id="btn-foto-pick" class="btn-secondary">Foto aufnehmen / auswählen</button>
+        <button id="btn-foto-send" class="btn-primary" disabled>Sticker erkennen</button>
+      </div>
+
+      <!-- Audio Tab -->
+      <div id="tab-audio" class="tab-panel">
+        <div id="audio-status">Halte die Taste gedrückt und sprich den Sticker-Code</div>
+        <button id="btn-mic" class="btn-mic">Halten zum Aufnehmen</button>
+      </div>
+
+      <!-- Feedback -->
+      <div id="feedback" hidden></div>
+    </section>
+
+    <section id="stats-card">
+      <h2>Übersicht</h2>
+      <div id="stats">
+        <div class="stat"><span id="stat-vorhanden">–</span><small>Vorhanden</small></div>
+        <div class="stat"><span id="stat-fehlt">–</span><small>Fehlen noch</small></div>
+        <div class="stat"><span id="stat-doppelt">–</span><small>Doppelt</small></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
