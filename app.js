@@ -162,13 +162,34 @@ function blobToBase64(blob) {
   });
 }
 
+// ── Fetch with retry ─────────────────────────────────────────────────────────
+
+async function fetchWithRetry(url, options, retries = 1) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 1500));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 // ── Submit ───────────────────────────────────────────────────────────────────
 
 async function submitSticker(payload) {
   showFeedback('Wird eingetragen…', 'loading');
 
   try {
-    const res = await fetch(CONFIG.webhookUrl, {
+    const res = await fetchWithRetry(CONFIG.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -203,7 +224,7 @@ async function submitSticker(payload) {
 
 async function loadStats() {
   try {
-    const res = await fetch(CONFIG.statsUrl, {
+    const res = await fetchWithRetry(CONFIG.statsUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})
@@ -320,7 +341,7 @@ async function loadCollection() {
   list.innerHTML = '<div class="collection-loading"><div class="spinner"></div>Sammlung wird geladen…</div>';
 
   try {
-    const res = await fetch(CONFIG.collectionUrl, {
+    const res = await fetchWithRetry(CONFIG.collectionUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({})
@@ -472,7 +493,7 @@ function confirmRemoveSticker(code, name, status) {
 async function removeStickerFromSammlung(code) {
   showToast('Wird entfernt…', 'warning');
   try {
-    const res = await fetch(CONFIG.removeUrl, {
+    const res = await fetchWithRetry(CONFIG.removeUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, nutzer: getNutzer() })
@@ -496,7 +517,7 @@ async function removeStickerFromSammlung(code) {
 async function addStickerFromSammlung(code) {
   showToast('Wird eingetragen…', 'success');
   try {
-    const res = await fetch(CONFIG.webhookUrl, {
+    const res = await fetchWithRetry(CONFIG.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ inputType: 'text', code, nutzer: getNutzer() })
