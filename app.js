@@ -200,7 +200,11 @@ async function submitSticker(payload) {
 
 async function loadStats() {
   try {
-    const res = await fetch(CONFIG.statsUrl);
+    const res = await fetch(CONFIG.statsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
     if (!res.ok) return;
     const data = await res.json();
     updateStats(data.vorhanden || 0, data.doppelt || 0);
